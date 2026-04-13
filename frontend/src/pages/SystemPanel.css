@@ -1,6 +1,60 @@
 /* System Panel */
 .sys-panel { margin-bottom: 36px; }
 
+/* Spinner */
+@keyframes sys-spin { to { transform: rotate(360deg); } }
+
+.sys-spinner {
+  display: inline-block;
+  border-style: solid;
+  border-color: rgba(15, 52, 96, 0.2);
+  border-top-color: #0f3460;
+  border-radius: 50%;
+  animation: sys-spin 0.75s linear infinite;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+/* Title row with inline spinner */
+.sys-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Loading placeholder in sub-sections */
+.sys-loading-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 0;
+  margin-bottom: 24px;
+}
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+
+.stat-skeleton-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.stat-skeleton {
+  border-radius: 6px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite;
+}
+
+.bar-skeleton  { height: 8px; border-radius: 99px; }
+.text-skeleton { height: 12px; }
+.text-skeleton.short { width: 55%; }
+
 .sys-stats-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -28,6 +82,7 @@
 }
 
 .stat-loading { color: #aaa; font-size: 14px; }
+/* kept for legacy compat */
 
 .bar-bg {
   height: 8px;
@@ -69,6 +124,7 @@
 }
 
 .sys-loading { color: #aaa; font-size: 14px; margin-bottom: 24px; }
+/* sys-loading-block replaces sys-loading for first-load state */
 .sys-empty   { color: #aaa; font-size: 14px; margin-bottom: 24px; }
 
 /* Volumes grid */

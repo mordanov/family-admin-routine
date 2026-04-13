@@ -20,12 +20,25 @@ function UsageBar({ percent, danger = 85, warning = 65 }) {
   )
 }
 
+function Spinner({ size = 16 }) {
+  return (
+    <span
+      className="sys-spinner"
+      style={{ width: size, height: size, borderWidth: size > 14 ? 2 : 1.5 }}
+    />
+  )
+}
+
 function StatBox({ label, used, total, free, percent, loading }) {
   return (
     <div className="stat-box">
       <div className="stat-label">{label}</div>
       {loading ? (
-        <div className="stat-loading">…</div>
+        <div className="stat-skeleton-wrap">
+          <div className="stat-skeleton bar-skeleton" />
+          <div className="stat-skeleton text-skeleton short" />
+          <div className="stat-skeleton text-skeleton" />
+        </div>
       ) : (
         <>
           <UsageBar percent={percent} />
@@ -46,9 +59,15 @@ export default function SystemPanel({ data, loading, t }) {
   const volumes = data?.volumes || {}
   const containers = data?.containers || []
 
+  // First load: data is null. Subsequent refreshes: data exists but loading=true.
+  const isFirstLoad = loading && !data
+
   return (
     <section className="section sys-panel">
-      <h2 className="section-title">{t('sysTitle')}</h2>
+      <h2 className="section-title sys-title-row">
+        {t('sysTitle')}
+        {loading && <Spinner size={14} />}
+      </h2>
 
       {/* Disk + RAM */}
       <div className="sys-stats-row">
@@ -58,7 +77,7 @@ export default function SystemPanel({ data, loading, t }) {
           total={disk.total_bytes}
           free={disk.free_bytes}
           percent={disk.used_percent}
-          loading={loading}
+          loading={isFirstLoad}
         />
         <StatBox
           label={t('sysRam')}
@@ -66,14 +85,16 @@ export default function SystemPanel({ data, loading, t }) {
           total={ram.total_bytes}
           free={ram.available_bytes}
           percent={ram.used_percent}
-          loading={loading}
+          loading={isFirstLoad}
         />
       </div>
 
       {/* Volumes */}
       <div className="sys-sub-title">{t('sysVolumes')}</div>
-      {loading ? (
-        <div className="sys-loading">…</div>
+      {isFirstLoad ? (
+        <div className="sys-loading-block">
+          <Spinner size={20} />
+        </div>
       ) : Object.keys(volumes).length === 0 ? (
         <div className="sys-empty">{t('sysNoData')}</div>
       ) : (
@@ -92,8 +113,10 @@ export default function SystemPanel({ data, loading, t }) {
 
       {/* Containers */}
       <div className="sys-sub-title">{t('sysContainers')}</div>
-      {loading ? (
-        <div className="sys-loading">…</div>
+      {isFirstLoad ? (
+        <div className="sys-loading-block">
+          <Spinner size={20} />
+        </div>
       ) : containers.length === 0 ? (
         <div className="sys-empty">{t('sysNoDocker')}</div>
       ) : (
@@ -134,4 +157,3 @@ export default function SystemPanel({ data, loading, t }) {
     </section>
   )
 }
-
