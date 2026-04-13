@@ -1,0 +1,55 @@
+services:
+  admin-routine-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      SECRET_KEY: ${SECRET_KEY:-change-me-admin-routine-secret}
+      BACKUPS_DIR: /app/backups
+      ADMIN_USER1_USERNAME: ${ADMIN_USER1_USERNAME:-admin1}
+      ADMIN_USER1_PASSWORD: ${ADMIN_USER1_PASSWORD:-password1}
+      ADMIN_USER2_USERNAME: ${ADMIN_USER2_USERNAME:-admin2}
+      ADMIN_USER2_PASSWORD: ${ADMIN_USER2_PASSWORD:-password2}
+      RECIPES_DB_HOST: ${RECIPES_DB_HOST:-recipes-db}
+      RECIPES_POSTGRES_DB: ${RECIPES_POSTGRES_DB:-}
+      RECIPES_POSTGRES_USER: ${RECIPES_POSTGRES_USER:-}
+      RECIPES_POSTGRES_PASSWORD: ${RECIPES_POSTGRES_PASSWORD:-}
+      POETRY_DB_HOST: ${POETRY_DB_HOST:-recipes-db}
+      POETRY_POSTGRES_DB: ${POETRY_POSTGRES_DB:-}
+      POETRY_POSTGRES_USER: ${POETRY_POSTGRES_USER:-}
+      POETRY_POSTGRES_PASSWORD: ${POETRY_POSTGRES_PASSWORD:-}
+      NEWS_DB_HOST: ${NEWS_DB_HOST:-recipes-db}
+      NEWS_POSTGRES_DB: ${NEWS_POSTGRES_DB:-}
+      NEWS_POSTGRES_USER: ${NEWS_POSTGRES_USER:-}
+      NEWS_POSTGRES_PASSWORD: ${NEWS_POSTGRES_PASSWORD:-}
+      BUDGET_DB_HOST: ${BUDGET_DB_HOST:-recipes-db}
+      BUDGET_POSTGRES_DB: ${BUDGET_POSTGRES_DB:-}
+      BUDGET_POSTGRES_USER: ${BUDGET_POSTGRES_USER:-}
+      BUDGET_POSTGRES_PASSWORD: ${BUDGET_POSTGRES_PASSWORD:-}
+      REMINDERS_DB_HOST: ${REMINDERS_DB_HOST:-recipes-db}
+      REMINDERS_POSTGRES_DB: ${REMINDERS_POSTGRES_DB:-}
+      REMINDERS_POSTGRES_USER: ${REMINDERS_POSTGRES_USER:-}
+      REMINDERS_POSTGRES_PASSWORD: ${REMINDERS_POSTGRES_PASSWORD:-}
+    volumes:
+      - backups_data:/app/backups
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  admin-routine-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    expose:
+      - "80"
+    depends_on:
+      - admin-routine-backend
+
+volumes:
+  backups_data:
