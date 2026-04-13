@@ -23,7 +23,7 @@ vi.mock('../src/api/backups', () => ({
   getJobStatus:  vi.fn(),
   restoreBackup: vi.fn(),
   deleteBackup:  vi.fn(),
-  downloadUrl:   (f) => `/api/backups/${encodeURIComponent(f)}/download`,
+  downloadBackup: vi.fn(),
 }))
 
 import {
@@ -104,11 +104,11 @@ describe('DashboardPage', () => {
     })
   })
 
-  it('renders download links for each backup', async () => {
+  it('renders download buttons for each backup', async () => {
     renderDashboard()
     await waitFor(() => {
-      const links = screen.getAllByRole('link', { name: /download/i })
-      expect(links.length).toBe(2)
+      const buttons = screen.getAllByRole('button', { name: /download/i })
+      expect(buttons.length).toBe(2)
     })
   })
 

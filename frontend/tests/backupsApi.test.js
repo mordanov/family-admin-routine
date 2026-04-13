@@ -12,7 +12,7 @@ import {
   getJobStatus,
   restoreBackup,
   deleteBackup,
-  downloadUrl,
+  downloadBackup,
 } from '../src/api/backups'
 
 import { login, getMe } from '../src/api/auth'
@@ -81,15 +81,40 @@ describe('deleteBackup', () => {
   })
 })
 
-describe('downloadUrl', () => {
-  it('returns the correct download URL', () => {
-    const url = downloadUrl('news-site_20260101_120000.zip')
-    expect(url).toBe('/api/backups/news-site_20260101_120000.zip/download')
+describe('downloadBackup', () => {
+  it('calls GET with responseType blob and the correct URL', async () => {
+    const blob = new Blob(['data'], { type: 'application/zip' })
+    api.get.mockResolvedValue({ data: blob })
+    const objectUrl = 'blob:http://localhost/fake'
+    URL.createObjectURL = vi.fn().mockReturnValue(objectUrl)
+    URL.revokeObjectURL = vi.fn()
+    const clickMock = vi.fn()
+    vi.spyOn(document, 'createElement').mockReturnValue({ href: '', download: '', click: clickMock })
+
+    await downloadBackup('news-site_20260101_120000.zip')
+
+    expect(api.get).toHaveBeenCalledWith(
+      `/backups/${encodeURIComponent('news-site_20260101_120000.zip')}/download`,
+      { responseType: 'blob' }
+    )
+    expect(URL.createObjectURL).toHaveBeenCalledWith(blob)
+    expect(clickMock).toHaveBeenCalled()
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith(objectUrl)
   })
 
-  it('encodes special characters in filename', () => {
-    const url = downloadUrl('my site_2026.zip')
-    expect(url).toContain(encodeURIComponent('my site_2026.zip'))
+  it('encodes special characters in filename', async () => {
+    const blob = new Blob(['data'], { type: 'application/zip' })
+    api.get.mockResolvedValue({ data: blob })
+    URL.createObjectURL = vi.fn().mockReturnValue('blob:fake')
+    URL.revokeObjectURL = vi.fn()
+    vi.spyOn(document, 'createElement').mockReturnValue({ href: '', download: '', click: vi.fn() })
+
+    await downloadBackup('my site_2026.zip')
+
+    expect(api.get).toHaveBeenCalledWith(
+      `/backups/${encodeURIComponent('my site_2026.zip')}/download`,
+      { responseType: 'blob' }
+    )
   })
 })
 
