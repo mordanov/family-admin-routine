@@ -6,6 +6,7 @@ services:
     volumes:
       - ./backend:/app
       - backups_data:/app/backups
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
       SECRET_KEY: dev-secret-key-not-for-production
       BACKUPS_DIR: /app/backups

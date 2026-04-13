@@ -33,6 +33,7 @@ services:
       REMINDERS_POSTGRES_PASSWORD: ${REMINDERS_POSTGRES_PASSWORD:-}
     volumes:
       - backups_data:/app/backups
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     expose:
       - "8000"
     healthcheck:

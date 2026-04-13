@@ -1,0 +1,175 @@
+/* System Panel */
+.sys-panel { margin-bottom: 36px; }
+
+.sys-stats-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+/* Stat box (disk / ram) */
+.stat-box {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px 20px 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stat-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #444;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.stat-loading { color: #aaa; font-size: 14px; }
+
+.bar-bg {
+  height: 8px;
+  background: #eee;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.5s ease;
+}
+
+.bar-fill.ok     { background: #4caf50; }
+.bar-fill.warn   { background: #ff9800; }
+.bar-fill.danger { background: #f44336; }
+
+.stat-nums {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.stat-used { font-size: 16px; font-weight: 700; color: #1a1a2e; }
+.stat-pct  { font-size: 12px; color: #888; font-weight: 400; }
+.stat-free { font-size: 12px; color: #888; }
+.stat-total { font-size: 12px; color: #bbb; }
+
+/* Sub-headings */
+.sys-sub-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+
+.sys-loading { color: #aaa; font-size: 14px; margin-bottom: 24px; }
+.sys-empty   { color: #aaa; font-size: 14px; margin-bottom: 24px; }
+
+/* Volumes grid */
+.vol-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.vol-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 14px 16px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.07);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vol-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a1a2e;
+  word-break: break-all;
+}
+
+.vol-size {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f3460;
+}
+
+.vol-path {
+  font-size: 11px;
+  color: #aaa;
+  font-family: monospace;
+  word-break: break-all;
+}
+
+/* Containers table */
+.sys-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.sys-table th {
+  background: #f5f6fa;
+  text-align: left;
+  padding: 10px 14px;
+  color: #555;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  border-bottom: 1.5px solid #eee;
+}
+
+.sys-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid #f0f0f0;
+  color: #333;
+  vertical-align: middle;
+}
+
+.sys-table tr:last-child td { border-bottom: none; }
+.sys-table tr:hover td { background: #fafafa; }
+
+.td-mono { font-family: monospace; font-size: 13px; }
+
+.status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.status-ok   { background: #e8f5e9; color: #2e7d32; }
+.status-warn { background: #fff3e0; color: #e65100; }
+
+.inline-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 120px;
+}
+
+.inline-bar-wrap .bar-bg { flex: 1; }
+
+.inline-pct {
+  font-size: 12px;
+  color: #555;
+  white-space: nowrap;
+  min-width: 36px;
+  text-align: right;
+}
+
+@media (max-width: 700px) {
+  .sys-stats-row { grid-template-columns: 1fr; }
+  .vol-grid { grid-template-columns: 1fr 1fr; }
+}
+

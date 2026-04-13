@@ -56,6 +56,20 @@ const translations = {
     siteNews: '📰 News',
     siteBudget: '💰 Budget',
     siteReminders: '🔔 Reminders',
+
+    // System panel
+    sysTitle: 'System',
+    sysDisk: '💾 Disk',
+    sysRam: '🧠 RAM',
+    sysVolumes: 'Docker Volumes',
+    sysContainers: 'Containers',
+    sysContainerName: 'Name',
+    sysContainerStatus: 'Status',
+    sysContainerRss: 'Memory (RSS)',
+    sysContainerLimit: 'Limit',
+    sysContainerPct: 'Usage',
+    sysNoData: 'No volume data available.',
+    sysNoDocker: 'Docker socket not available (check container mount).',
   },
 
   ru: {
@@ -113,6 +127,20 @@ const translations = {
     siteNews: '📰 Новости',
     siteBudget: '💰 Бюджет',
     siteReminders: '🔔 Напоминания',
+
+    // System panel
+    sysTitle: 'Система',
+    sysDisk: '💾 Диск',
+    sysRam: '🧠 Память',
+    sysVolumes: 'Docker Volumes',
+    sysContainers: 'Контейнеры',
+    sysContainerName: 'Имя',
+    sysContainerStatus: 'Статус',
+    sysContainerRss: 'Память (RSS)',
+    sysContainerLimit: 'Лимит',
+    sysContainerPct: 'Использование',
+    sysNoData: 'Данные о volumes недоступны.',
+    sysNoDocker: 'Docker socket недоступен (проверьте монтирование контейнера).',
   },
 }
 

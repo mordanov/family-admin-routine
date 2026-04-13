@@ -12,6 +12,8 @@ import {
   getSites,
   restoreBackup,
 } from '../api/backups'
+import { getSystemInfo } from '../api/system'
+import SystemPanel from './SystemPanel'
 import './Dashboard.css'
 
 function fmtBytes(b) {
@@ -35,6 +37,8 @@ export default function DashboardPage() {
   const [backups, setBackups] = useState([])
   const [filterSite, setFilterSite] = useState('all')
   const [jobs, setJobs] = useState({}) // jobId -> job info
+  const [sysData, setSysData] = useState(null)
+  const [sysLoading, setSysLoading] = useState(true)
   const pollRef = useRef({})
 
   const loadAll = useCallback(async () => {
@@ -47,9 +51,23 @@ export default function DashboardPage() {
     }
   }, [])
 
+  const loadSystem = useCallback(async () => {
+    try {
+      const data = await getSystemInfo()
+      setSysData(data)
+    } catch {
+      setSysData(null)
+    } finally {
+      setSysLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     loadAll()
-  }, [loadAll])
+    loadSystem()
+    const sysInterval = setInterval(loadSystem, 60_000)
+    return () => clearInterval(sysInterval)
+  }, [loadAll, loadSystem])
 
   // Poll a job until done/failed
   const pollJob = useCallback(
@@ -306,6 +324,9 @@ export default function DashboardPage() {
             </div>
           )}
         </section>
+
+        {/* System info */}
+        <SystemPanel data={sysData} loading={sysLoading} t={t} />
       </main>
     </div>
   )
