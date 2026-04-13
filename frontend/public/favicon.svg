@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Shield -->
+  <path d="M4 3h24v14Q28 28 16 31Q4 28 4 17Z" fill="#234da0" stroke="#5580cc" stroke-width="1"/>
+  <!-- Gear (6 teeth, white) -->
+  <path d="M14.9,9.6h2.2l-.3,1.7 2,1.2 1.3,-1.2 1.1,2-1.6,.5v2.4l1.6,.5-1.1,2-1.3,-1.2-2,1.2.3,1.7h-2.2l.3,-1.7-2,-1.2-1.3,1.2-1.1,-2 1.6,-.5v-2.4l-1.6,-.5 1.1,-2 1.3,1.2 2,-1.2Z" fill="white"/>
+  <!-- Gear hub -->
+  <circle cx="16" cy="15" r="1.8" fill="#234da0"/>
+</svg>
