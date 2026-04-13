@@ -15,5 +15,14 @@ export const restoreBackup = (filename) =>
 export const deleteBackup = (filename) =>
   api.delete(`/backups/${encodeURIComponent(filename)}`).then((r) => r.data)
 
-export const downloadUrl = (filename) =>
-  `/api/backups/${encodeURIComponent(filename)}/download`
+export const downloadBackup = async (filename) => {
+  const response = await api.get(`/backups/${encodeURIComponent(filename)}/download`, {
+    responseType: 'blob',
+  })
+  const url = URL.createObjectURL(response.data)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}

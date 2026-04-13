@@ -6,7 +6,7 @@ import { useT, SITE_LABEL_KEYS } from '../i18n'
 import {
   createBackup,
   deleteBackup,
-  downloadUrl,
+  downloadBackup,
   getBackups,
   getJobStatus,
   getSites,
@@ -280,13 +280,12 @@ export default function DashboardPage() {
                       <td>{fmtBytes(b.size_bytes)}</td>
                       <td>{fmtDate(b.created_at)}</td>
                       <td className="td-actions">
-                        <a
-                          href={downloadUrl(b.filename)}
+                        <button
                           className="btn-action btn-download"
-                          download
+                          onClick={() => downloadBackup(b.filename)}
                         >
                           {t('download')}
-                        </a>
+                        </button>
                         <button
                           className="btn-action btn-restore"
                           onClick={() => handleRestore(b.filename)}
