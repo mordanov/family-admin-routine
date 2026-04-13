@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
+import { useLangStore } from '../store/langStore'
+import { useT, SITE_LABEL_KEYS } from '../i18n'
 import {
   createBackup,
   deleteBackup,
@@ -11,14 +13,6 @@ import {
   restoreBackup,
 } from '../api/backups'
 import './Dashboard.css'
-
-const SITE_LABELS = {
-  'family-kitchen-recipes': '🍳 Recipes',
-  'poetry-site': '📝 Poetry',
-  'news-site': '📰 News',
-  'budget-site': '💰 Budget',
-  'reminders-app': '🔔 Reminders',
-}
 
 function fmtBytes(b) {
   if (b < 1024) return b + ' B'
@@ -33,7 +27,9 @@ function fmtDate(iso) {
 
 export default function DashboardPage() {
   const { username, logout } = useAuthStore()
+  const { lang, setLang } = useLangStore()
   const navigate = useNavigate()
+  const t = useT()
 
   const [sites, setSites] = useState([])
   const [backups, setBackups] = useState([])
@@ -87,35 +83,35 @@ export default function DashboardPage() {
       const { job_id } = await createBackup(siteName)
       setJobs((prev) => ({
         ...prev,
-        [job_id]: { status: 'pending', message: 'Queued…', site: siteName },
+        [job_id]: { status: 'pending', message: t('queued'), site: siteName },
       }))
       pollJob(job_id)
     } catch (err) {
-      alert('Failed to start backup: ' + (err.response?.data?.detail || err.message))
+      alert(t('failedBackup') + (err.response?.data?.detail || err.message))
     }
   }
 
   const handleRestore = async (filename) => {
-    if (!confirm(`Restore from "${filename}"?\nThis will OVERWRITE the current database and files.`)) return
+    if (!confirm(t('confirmRestore', filename))) return
     try {
       const { job_id } = await restoreBackup(filename)
       setJobs((prev) => ({
         ...prev,
-        [job_id]: { status: 'pending', message: 'Queued…', filename },
+        [job_id]: { status: 'pending', message: t('queued'), filename },
       }))
       pollJob(job_id)
     } catch (err) {
-      alert('Failed to start restore: ' + (err.response?.data?.detail || err.message))
+      alert(t('failedRestore') + (err.response?.data?.detail || err.message))
     }
   }
 
   const handleDelete = async (filename) => {
-    if (!confirm(`Delete backup "${filename}"?`)) return
+    if (!confirm(t('confirmDelete', filename))) return
     try {
       await deleteBackup(filename)
       await loadAll()
     } catch (err) {
-      alert('Failed to delete: ' + (err.response?.data?.detail || err.message))
+      alert(t('failedDelete') + (err.response?.data?.detail || err.message))
     }
   }
 
@@ -138,17 +134,29 @@ export default function DashboardPage() {
       (j) => j.site === siteName && (j.status === 'running' || j.status === 'pending')
     )
 
+  const siteLabel = (name) => t(SITE_LABEL_KEYS[name] || name)
+
   return (
     <div className="dashboard">
       {/* Header */}
       <header className="header">
         <div className="header-left">
           <span className="header-logo">🛡️</span>
-          <span className="header-title">Admin Routine</span>
+          <span className="header-title">{t('appName')}</span>
         </div>
         <div className="header-right">
+          <div className="lang-toggle">
+            <button
+              className={lang === 'en' ? 'lang-btn active' : 'lang-btn'}
+              onClick={() => setLang('en')}
+            >EN</button>
+            <button
+              className={lang === 'ru' ? 'lang-btn active' : 'lang-btn'}
+              onClick={() => setLang('ru')}
+            >RU</button>
+          </div>
           <span className="header-user">👤 {username}</span>
-          <button className="btn-logout" onClick={handleLogout}>Sign out</button>
+          <button className="btn-logout" onClick={handleLogout}>{t('signOut')}</button>
         </div>
       </header>
 
@@ -193,20 +201,20 @@ export default function DashboardPage() {
 
         {/* Sites section */}
         <section className="section">
-          <h2 className="section-title">Sites</h2>
+          <h2 className="section-title">{t('sites')}</h2>
           <div className="sites-grid">
             {sites.map((site) => (
               <div key={site.name} className="site-card">
                 <div className="site-name">
-                  {SITE_LABELS[site.name] || site.name}
+                  {siteLabel(site.name)}
                 </div>
                 <div className="site-meta">
                   {site.volumes.length > 0
-                    ? `Volumes: ${site.volumes.join(', ')}`
-                    : 'DB only'}
+                    ? `${t('volumes')} ${site.volumes.join(', ')}`
+                    : t('dbOnly')}
                 </div>
                 <div className="site-last">
-                  Last backup: {fmtDate(site.last_backup)}
+                  {t('lastBackup')} {fmtDate(site.last_backup)}
                 </div>
                 <button
                   className="btn-backup"
@@ -214,9 +222,9 @@ export default function DashboardPage() {
                   disabled={siteHasJob(site.name)}
                 >
                   {siteHasJob(site.name) ? (
-                    <><span className="spinner-sm" /> Running…</>
+                    <><span className="spinner-sm" /> {t('running')}</>
                   ) : (
-                    '+ Create Backup'
+                    t('createBackup')
                   )}
                 </button>
               </div>
@@ -227,18 +235,18 @@ export default function DashboardPage() {
         {/* Backups section */}
         <section className="section">
           <div className="section-header">
-            <h2 className="section-title">Backups</h2>
+            <h2 className="section-title">{t('backups')}</h2>
             <div className="filter-row">
-              <label htmlFor="filter-site">Filter:</label>
+              <label htmlFor="filter-site">{t('filter')}</label>
               <select
                 id="filter-site"
                 value={filterSite}
                 onChange={(e) => setFilterSite(e.target.value)}
               >
-                <option value="all">All sites</option>
+                <option value="all">{t('allSites')}</option>
                 {sites.map((s) => (
                   <option key={s.name} value={s.name}>
-                    {SITE_LABELS[s.name] || s.name}
+                    {siteLabel(s.name)}
                   </option>
                 ))}
               </select>
@@ -247,17 +255,17 @@ export default function DashboardPage() {
           </div>
 
           {filteredBackups.length === 0 ? (
-            <div className="empty-state">No backups yet. Create one above.</div>
+            <div className="empty-state">{t('noBackups')}</div>
           ) : (
             <div className="table-wrap">
               <table className="backups-table">
                 <thead>
                   <tr>
-                    <th>Filename</th>
-                    <th>Site</th>
-                    <th>Size</th>
-                    <th>Created</th>
-                    <th>Actions</th>
+                    <th>{t('colFilename')}</th>
+                    <th>{t('colSite')}</th>
+                    <th>{t('colSize')}</th>
+                    <th>{t('colCreated')}</th>
+                    <th>{t('colActions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -266,7 +274,7 @@ export default function DashboardPage() {
                       <td className="td-filename">{b.filename}</td>
                       <td>
                         <span className="badge">
-                          {SITE_LABELS[b.site] || b.site}
+                          {siteLabel(b.site)}
                         </span>
                       </td>
                       <td>{fmtBytes(b.size_bytes)}</td>
@@ -277,19 +285,19 @@ export default function DashboardPage() {
                           className="btn-action btn-download"
                           download
                         >
-                          ↓ Download
+                          {t('download')}
                         </a>
                         <button
                           className="btn-action btn-restore"
                           onClick={() => handleRestore(b.filename)}
                         >
-                          ↺ Restore
+                          {t('restore')}
                         </button>
                         <button
                           className="btn-action btn-delete"
                           onClick={() => handleDelete(b.filename)}
                         >
-                          🗑 Delete
+                          {t('delete')}
                         </button>
                       </td>
                     </tr>

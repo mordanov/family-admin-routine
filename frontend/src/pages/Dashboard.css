@@ -51,6 +51,37 @@
 
 .btn-logout:hover { background: rgba(255,255,255,0.1); }
 
+/* Language toggle */
+.lang-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border: 1.5px solid rgba(255,255,255,0.25);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.lang-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.55);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 9px;
+  letter-spacing: 0.4px;
+  transition: background 0.15s, color 0.15s;
+  cursor: pointer;
+}
+
+.lang-btn:first-child { border-right: 1px solid rgba(255,255,255,0.2); }
+
+.lang-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+.lang-btn.active {
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+}
+
 /* Main */
 .main {
   flex: 1;

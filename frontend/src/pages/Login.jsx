@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
+import { useLangStore } from '../store/langStore'
+import { useT } from '../i18n'
 import { login } from '../api/auth'
 import './Login.css'
 
@@ -10,7 +12,9 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { login: storeLogin } = useAuthStore()
+  const { lang, setLang } = useLangStore()
   const navigate = useNavigate()
+  const t = useT()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -21,7 +25,7 @@ export default function LoginPage() {
       storeLogin(data.access_token, username)
       navigate('/')
     } catch {
-      setError('Invalid credentials')
+      setError(t('invalidCredentials'))
     } finally {
       setLoading(false)
     }
@@ -29,13 +33,23 @@ export default function LoginPage() {
 
   return (
     <div className="login-page">
+      <div className="lang-toggle login-lang">
+        <button
+          className={lang === 'en' ? 'lang-btn active' : 'lang-btn'}
+          onClick={() => setLang('en')}
+        >EN</button>
+        <button
+          className={lang === 'ru' ? 'lang-btn active' : 'lang-btn'}
+          onClick={() => setLang('ru')}
+        >RU</button>
+      </div>
       <div className="login-card">
         <div className="login-icon">🛡️</div>
-        <h1 className="login-title">Admin Routine</h1>
-        <p className="login-subtitle">Backup management</p>
+        <h1 className="login-title">{t('appName')}</h1>
+        <p className="login-subtitle">{t('backupManagement')}</p>
         <form onSubmit={handleSubmit} className="login-form">
           <div className="field">
-            <label htmlFor="username">Username</label>
+            <label htmlFor="username">{t('username')}</label>
             <input
               id="username"
               type="text"
@@ -46,7 +60,7 @@ export default function LoginPage() {
             />
           </div>
           <div className="field">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">{t('password')}</label>
             <input
               id="password"
               type="password"
@@ -58,7 +72,7 @@ export default function LoginPage() {
           </div>
           {error && <p className="login-error">{error}</p>}
           <button type="submit" className="login-btn" disabled={loading}>
-            {loading ? 'Signing in…' : 'Sign in'}
+            {loading ? t('signingIn') : t('signIn')}
           </button>
         </form>
       </div>

@@ -94,3 +94,40 @@
 .login-btn:disabled {
   opacity: 0.6;
 }
+
+/* Language toggle on login page */
+.login-lang {
+  position: fixed;
+  top: 16px;
+  right: 20px;
+  border: 1.5px solid rgba(255,255,255,0.3);
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+}
+
+.login-lang .lang-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.6);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 10px;
+  letter-spacing: 0.4px;
+  transition: background 0.15s, color 0.15s;
+  cursor: pointer;
+}
+
+.login-lang .lang-btn:first-child {
+  border-right: 1px solid rgba(255,255,255,0.25);
+}
+
+.login-lang .lang-btn:hover {
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+}
+
+.login-lang .lang-btn.active {
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+}

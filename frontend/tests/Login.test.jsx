@@ -119,7 +119,7 @@ describe('LoginPage', () => {
     await userEvent.type(screen.getByLabelText(/password/i), 'pass1')
     await userEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
-    expect(screen.getByRole('button')).toBeDisabled()
+    expect(screen.getByRole('button', { name: /signing in/i })).toBeDisabled()
     resolve({ access_token: 'tok', token_type: 'bearer' })
   })
 })
