@@ -59,6 +59,7 @@ const translations = {
 
     // System panel
     sysTitle: 'System',
+    sysDiskRam: 'Disk & RAM',
     sysDisk: '💾 Disk',
     sysRam: '🧠 RAM',
     sysVolumes: 'Docker Volumes',
@@ -130,6 +131,7 @@ const translations = {
 
     // System panel
     sysTitle: 'Система',
+    sysDiskRam: 'Диск и RAM',
     sysDisk: '💾 Диск',
     sysRam: '🧠 Память',
     sysVolumes: 'Docker Volumes',

@@ -1,7 +1,8 @@
 """
 /api/system — disk, memory, docker volumes and containers stats.
+Sub-endpoints allow independent refresh of each section.
 All Docker SDK calls are guarded: if the socket is not mounted the
-endpoint returns partial data instead of failing.
+endpoint returns an empty list instead of failing.
 """
 
 import asyncio
@@ -15,7 +16,7 @@ from fastapi import APIRouter, Depends
 from app.auth import get_current_user
 from app.config import BACKUPS_DIR, SITES
 
-router = APIRouter()
+router = APIRouter(prefix="/system", tags=["system"])
 
 # Volume paths we care about (backup dir + all site volumes)
 _VOLUME_PATHS: dict[str, str] = {"backups": BACKUPS_DIR}
@@ -104,18 +105,48 @@ def _container_stats() -> list[dict]:
         return []
 
 
-# ── endpoint ──────────────────────────────────────────────────────────────────
+# ── independent sub-endpoints ─────────────────────────────────────────────────
 
-@router.get("/system")
+@router.get("/diskram")
+async def get_diskram(_user=Depends(get_current_user)):
+    loop = asyncio.get_event_loop()
+    disk, ram = await asyncio.gather(
+        loop.run_in_executor(None, _disk_info),
+        loop.run_in_executor(None, _ram_info),
+    )
+    return {"disk": disk, "ram": ram}
+
+
+@router.get("/volumes")
+async def get_volumes(_user=Depends(get_current_user)):
+    loop = asyncio.get_event_loop()
+    volumes = {}
+    for label, path in _VOLUME_PATHS.items():
+        size = await loop.run_in_executor(None, _du, path)
+        volumes[label] = {"path": path, "size_bytes": size}
+    return {"volumes": volumes}
+
+
+@router.get("/containers")
+async def get_containers(_user=Depends(get_current_user)):
+    loop = asyncio.get_event_loop()
+    containers = await loop.run_in_executor(None, _container_stats)
+    return {"containers": containers}
+
+
+# ── combined endpoint (fetches all three in parallel) ─────────────────────────
+
+@router.get("")
 async def system_info(_user=Depends(get_current_user)):
-    # Run blocking calls in executor so we don't block the event loop.
     loop = asyncio.get_event_loop()
 
-    disk, ram, containers = await asyncio.gather(
+    disk_ram_task = asyncio.gather(
         loop.run_in_executor(None, _disk_info),
         loop.run_in_executor(None, _ram_info),
         loop.run_in_executor(None, _container_stats),
     )
+
+    disk, ram, containers = await disk_ram_task
 
     volumes = {}
     for label, path in _VOLUME_PATHS.items():
@@ -128,4 +159,3 @@ async def system_info(_user=Depends(get_current_user)):
         "volumes": volumes,
         "containers": containers,
     }
-

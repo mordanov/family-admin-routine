@@ -1,4 +1,5 @@
-import React from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
+import { getSystemDiskRam, getSystemVolumes, getSystemContainers } from '../api/system'
 import './SystemPanel.css'
 
 function fmtBytes(b) {
@@ -29,6 +30,23 @@ function Spinner({ size = 16 }) {
   )
 }
 
+function RefreshBtn({ loading, onClick }) {
+  return (
+    <button className="sys-refresh-btn" onClick={onClick} disabled={loading} title="Refresh">
+      {loading ? <Spinner size={12} /> : '↻'}
+    </button>
+  )
+}
+
+function SectionHeader({ title, loading, onRefresh }) {
+  return (
+    <div className="sys-sub-header">
+      <span className="sys-sub-title">{title}</span>
+      <RefreshBtn loading={loading} onClick={onRefresh} />
+    </div>
+  )
+}
+
 function StatBox({ label, used, total, free, percent, loading }) {
   return (
     <div className="stat-box">
@@ -43,7 +61,9 @@ function StatBox({ label, used, total, free, percent, loading }) {
         <>
           <UsageBar percent={percent} />
           <div className="stat-nums">
-            <span className="stat-used">{fmtBytes(used)} {percent != null && <span className="stat-pct">({percent}%)</span>}</span>
+            <span className="stat-used">
+              {fmtBytes(used)}{percent != null && <span className="stat-pct"> ({percent}%)</span>}
+            </span>
             <span className="stat-free">free {fmtBytes(free)}</span>
           </div>
           <div className="stat-total">total {fmtBytes(total)}</div>
@@ -53,23 +73,59 @@ function StatBox({ label, used, total, free, percent, loading }) {
   )
 }
 
-export default function SystemPanel({ data, loading, t }) {
-  const disk = data?.disk || {}
-  const ram = data?.ram || {}
-  const volumes = data?.volumes || {}
-  const containers = data?.containers || []
+function useSection(fetcher, autoRefreshMs = null) {
+  const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
 
-  // First load: data is null. Subsequent refreshes: data exists but loading=true.
-  const isFirstLoad = loading && !data
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError(false)
+    try {
+      const result = await fetcher()
+      setData(result)
+    } catch {
+      setError(true)
+    } finally {
+      setLoading(false)
+    }
+  }, [fetcher])
+
+  useEffect(() => {
+    load()
+    if (autoRefreshMs) {
+      const id = setInterval(load, autoRefreshMs)
+      return () => clearInterval(id)
+    }
+  }, [load, autoRefreshMs])
+
+  return { data, loading, error, refresh: load }
+}
+
+export default function SystemPanel({ t }) {
+  const diskRam = useSection(getSystemDiskRam, 60_000)
+  const volumes = useSection(getSystemVolumes, 120_000)
+  const containers = useSection(getSystemContainers, 30_000)
+
+  const disk = diskRam.data?.disk || {}
+  const ram  = diskRam.data?.ram  || {}
+  const vols = volumes.data?.volumes || {}
+  const ctrs = containers.data?.containers || []
+
+  const isFirstDiskRam   = diskRam.loading && !diskRam.data
+  const isFirstVolumes   = volumes.loading && !volumes.data
+  const isFirstContainers = containers.loading && !containers.data
 
   return (
     <section className="section sys-panel">
-      <h2 className="section-title sys-title-row">
-        {t('sysTitle')}
-        {loading && <Spinner size={14} />}
-      </h2>
+      <h2 className="section-title">{t('sysTitle')}</h2>
 
-      {/* Disk + RAM */}
+      {/* ── Disk + RAM ── */}
+      <SectionHeader
+        title={t('sysDiskRam')}
+        loading={diskRam.loading}
+        onRefresh={diskRam.refresh}
+      />
       <div className="sys-stats-row">
         <StatBox
           label={t('sysDisk')}
@@ -77,7 +133,7 @@ export default function SystemPanel({ data, loading, t }) {
           total={disk.total_bytes}
           free={disk.free_bytes}
           percent={disk.used_percent}
-          loading={isFirstLoad}
+          loading={isFirstDiskRam}
         />
         <StatBox
           label={t('sysRam')}
@@ -85,39 +141,41 @@ export default function SystemPanel({ data, loading, t }) {
           total={ram.total_bytes}
           free={ram.available_bytes}
           percent={ram.used_percent}
-          loading={isFirstLoad}
+          loading={isFirstDiskRam}
         />
       </div>
 
-      {/* Volumes */}
-      <div className="sys-sub-title">{t('sysVolumes')}</div>
-      {isFirstLoad ? (
-        <div className="sys-loading-block">
-          <Spinner size={20} />
-        </div>
-      ) : Object.keys(volumes).length === 0 ? (
+      {/* ── Volumes ── */}
+      <SectionHeader
+        title={t('sysVolumes')}
+        loading={volumes.loading}
+        onRefresh={volumes.refresh}
+      />
+      {isFirstVolumes ? (
+        <div className="sys-loading-block"><Spinner size={20} /></div>
+      ) : Object.keys(vols).length === 0 ? (
         <div className="sys-empty">{t('sysNoData')}</div>
       ) : (
         <div className="vol-grid">
-          {Object.entries(volumes).map(([label, vol]) => (
+          {Object.entries(vols).map(([label, vol]) => (
             <div key={label} className="vol-card">
               <div className="vol-name">{label}</div>
-              <div className="vol-size">
-                {vol.size_bytes != null ? fmtBytes(vol.size_bytes) : '—'}
-              </div>
+              <div className="vol-size">{fmtBytes(vol.size_bytes)}</div>
               <div className="vol-path">{vol.path}</div>
             </div>
           ))}
         </div>
       )}
 
-      {/* Containers */}
-      <div className="sys-sub-title">{t('sysContainers')}</div>
-      {isFirstLoad ? (
-        <div className="sys-loading-block">
-          <Spinner size={20} />
-        </div>
-      ) : containers.length === 0 ? (
+      {/* ── Containers ── */}
+      <SectionHeader
+        title={t('sysContainers')}
+        loading={containers.loading}
+        onRefresh={containers.refresh}
+      />
+      {isFirstContainers ? (
+        <div className="sys-loading-block"><Spinner size={20} /></div>
+      ) : ctrs.length === 0 ? (
         <div className="sys-empty">{t('sysNoDocker')}</div>
       ) : (
         <div className="table-wrap">
@@ -132,7 +190,7 @@ export default function SystemPanel({ data, loading, t }) {
               </tr>
             </thead>
             <tbody>
-              {containers.map((c) => (
+              {ctrs.map((c) => (
                 <tr key={c.name}>
                   <td className="td-mono">{c.name}</td>
                   <td>
