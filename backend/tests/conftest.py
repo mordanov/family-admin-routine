@@ -3,6 +3,7 @@ import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
 
 from app.main import app
+from app import storage as storage_module
 
 TEST_USER1 = "admin1"
 TEST_PASS1 = "testpass1"
@@ -14,6 +15,15 @@ TEST_PASS2 = "testpass2"
 async def patch_users(monkeypatch):
     """Replace USERS in auth module with known test credentials for every test."""
     monkeypatch.setattr("app.auth.USERS", {TEST_USER1: TEST_PASS1, TEST_USER2: TEST_PASS2})
+
+
+@pytest.fixture(autouse=True)
+def _force_local_backup_backend(monkeypatch):
+    """Default tests assume the local-FS backup store; enforce it here."""
+    monkeypatch.setenv("BACKUP_STORAGE_BACKEND", "local")
+    storage_module.reset_store()
+    yield
+    storage_module.reset_store()
 
 
 @pytest_asyncio.fixture

@@ -6,6 +6,9 @@ Backup structure inside zip:
   db.dump          (pg_dump custom format)
   files/
     <volume_name>/  (copy of each volume directory)
+
+Backup *artefacts* (the zip files themselves) are persisted via a pluggable
+``BackupStore`` — see ``app.storage`` for backend selection (local FS or S3).
 """
 
 import asyncio
@@ -16,15 +19,14 @@ import tempfile
 import uuid
 import zipfile
 from datetime import datetime
-from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
-from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from app.auth import get_current_user
 from app.config import BACKUPS_DIR, SITES
+from app.storage import get_store
 
 router = APIRouter()
 
@@ -49,29 +51,18 @@ def _resolve_db(site_cfg: dict) -> tuple[str, str, str, str]:
     return host, name, user, password
 
 
-def _list_backup_files() -> list[dict]:
-    os.makedirs(BACKUPS_DIR, exist_ok=True)
-    result = []
-    for fname in sorted(os.listdir(BACKUPS_DIR), reverse=True):
-        if not fname.endswith(".zip"):
-            continue
-        fpath = os.path.join(BACKUPS_DIR, fname)
-        stat = os.stat(fpath)
-        # filename format: <site>_YYYYMMDD_HHMMSS.zip
-        parts = fname[:-4].rsplit("_", 2)
-        site_name = parts[0] if len(parts) == 3 else "unknown"
-        result.append({
-            "filename": fname,
-            "site": site_name,
-            "size_bytes": stat.st_size,
-            "created_at": datetime.fromtimestamp(stat.st_mtime).isoformat(),
-        })
-    return result
+def _validate_filename(filename: str) -> None:
+    if "/" in filename or "\\" in filename or ".." in filename:
+        raise HTTPException(status_code=400, detail="Invalid filename")
 
 
 def _last_backup_for_site(site: str) -> Optional[str]:
     prefix = site + "_"
-    for b in _list_backup_files():
+    try:
+        backups = get_store().list_backups()
+    except Exception:
+        return None
+    for b in backups:
         if b["filename"].startswith(prefix):
             return b["created_at"]
     return None
@@ -129,14 +120,21 @@ async def _run_backup(job_id: str, site: str):
         _jobs[job_id]["message"] = "Compressing archive…"
         timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
         filename = f"{site}_{timestamp}.zip"
-        zip_path = os.path.join(BACKUPS_DIR, filename)
-        os.makedirs(BACKUPS_DIR, exist_ok=True)
+        # Build the zip in our tmp working dir; the store decides where it lives.
+        zip_path = os.path.join(tmpdir, filename)
         with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
             for root, _, files in os.walk(tmpdir):
                 for file in files:
+                    if file == filename and root == tmpdir:
+                        # Don't include the zip in itself.
+                        continue
                     abs_path = os.path.join(root, file)
                     arc_name = os.path.relpath(abs_path, tmpdir)
                     zf.write(abs_path, arc_name)
+
+        store = get_store()
+        _jobs[job_id]["message"] = f"Uploading to {store.backend_name} storage…"
+        await asyncio.to_thread(store.save_local_file, zip_path, filename)
 
         _jobs[job_id].update({"status": "done", "message": "Backup complete.", "filename": filename})
     except Exception as exc:
@@ -146,17 +144,23 @@ async def _run_backup(job_id: str, site: str):
 
 
 async def _run_restore(job_id: str, filename: str):
-    _jobs[job_id] = {"status": "running", "message": "Extracting archive…", "site": None, "filename": filename}
+    _jobs[job_id] = {"status": "running", "message": "Fetching archive…", "site": None, "filename": filename}
     tmpdir = tempfile.mkdtemp(prefix="admin_restore_")
     try:
-        zip_path = os.path.join(BACKUPS_DIR, filename)
-        if not os.path.isfile(zip_path):
+        store = get_store()
+        local_zip = os.path.join(tmpdir, filename)
+        try:
+            await asyncio.to_thread(store.fetch_to_local, filename, local_zip)
+        except FileNotFoundError:
             raise RuntimeError("Backup file not found")
 
-        with zipfile.ZipFile(zip_path, "r") as zf:
-            zf.extractall(tmpdir)
+        _jobs[job_id]["message"] = "Extracting archive…"
+        extract_dir = os.path.join(tmpdir, "extracted")
+        os.makedirs(extract_dir, exist_ok=True)
+        with zipfile.ZipFile(local_zip, "r") as zf:
+            zf.extractall(extract_dir)
 
-        meta_path = os.path.join(tmpdir, "metadata.json")
+        meta_path = os.path.join(extract_dir, "metadata.json")
         if not os.path.isfile(meta_path):
             raise RuntimeError("metadata.json missing in archive")
         with open(meta_path) as f:
@@ -195,7 +199,7 @@ async def _run_restore(job_id: str, filename: str):
         if proc.returncode != 0:
             raise RuntimeError(f"DB drop/recreate failed: {stderr.decode()}")
 
-        dump_path = os.path.join(tmpdir, "db.dump")
+        dump_path = os.path.join(extract_dir, "db.dump")
         if os.path.isfile(dump_path):
             proc = await asyncio.create_subprocess_exec(
                 "pg_restore", "-h", host, "-U", user, "-d", dbname, "--no-owner", "--role", user, dump_path,
@@ -209,7 +213,7 @@ async def _run_restore(job_id: str, filename: str):
                 raise RuntimeError(f"pg_restore failed: {stderr.decode()}")
 
         _jobs[job_id]["message"] = "Restoring files…"
-        files_dir = os.path.join(tmpdir, "files")
+        files_dir = os.path.join(extract_dir, "files")
         for vol in site_cfg["volumes"]:
             src = os.path.join(files_dir, vol["name"])
             dst = vol["path"]
@@ -240,7 +244,20 @@ async def list_sites(_: str = Depends(get_current_user)):
 
 @router.get("/backups")
 async def list_backups(_: str = Depends(get_current_user)):
-    return _list_backup_files()
+    return await asyncio.to_thread(get_store().list_backups)
+
+
+@router.get("/backups/storage-info")
+async def backup_storage_info(_: str = Depends(get_current_user)):
+    """Expose which backend is currently active (handy for the UI/diagnostics)."""
+    store = get_store()
+    info: dict = {"backend": store.backend_name}
+    if store.backend_name == "s3":
+        info["bucket"] = getattr(store, "bucket", None)
+        info["prefix"] = getattr(store, "prefix", None)
+    else:
+        info["dir"] = BACKUPS_DIR
+    return info
 
 
 class CreateBackupRequest(BaseModel):
@@ -269,12 +286,11 @@ async def backup_status(job_id: str, _: str = Depends(get_current_user)):
 
 @router.get("/backups/{filename}/download")
 async def download_backup(filename: str, _: str = Depends(get_current_user)):
-    if "/" in filename or ".." in filename:
-        raise HTTPException(status_code=400, detail="Invalid filename")
-    path = os.path.join(BACKUPS_DIR, filename)
-    if not os.path.isfile(path):
+    _validate_filename(filename)
+    store = get_store()
+    if not await asyncio.to_thread(store.exists, filename):
         raise HTTPException(status_code=404, detail="Backup not found")
-    return FileResponse(path, media_type="application/zip", filename=filename)
+    return await asyncio.to_thread(store.download_response, filename)
 
 
 @router.post("/backups/{filename}/restore")
@@ -283,10 +299,9 @@ async def restore_backup(
     background_tasks: BackgroundTasks,
     _: str = Depends(get_current_user),
 ):
-    if "/" in filename or ".." in filename:
-        raise HTTPException(status_code=400, detail="Invalid filename")
-    path = os.path.join(BACKUPS_DIR, filename)
-    if not os.path.isfile(path):
+    _validate_filename(filename)
+    store = get_store()
+    if not await asyncio.to_thread(store.exists, filename):
         raise HTTPException(status_code=404, detail="Backup not found")
     job_id = str(uuid.uuid4())
     background_tasks.add_task(_run_restore, job_id, filename)
@@ -295,10 +310,9 @@ async def restore_backup(
 
 @router.delete("/backups/{filename}")
 async def delete_backup(filename: str, _: str = Depends(get_current_user)):
-    if "/" in filename or ".." in filename:
-        raise HTTPException(status_code=400, detail="Invalid filename")
-    path = os.path.join(BACKUPS_DIR, filename)
-    if not os.path.isfile(path):
+    _validate_filename(filename)
+    store = get_store()
+    if not await asyncio.to_thread(store.exists, filename):
         raise HTTPException(status_code=404, detail="Backup not found")
-    os.remove(path)
+    await asyncio.to_thread(store.delete, filename)
     return {"ok": True}

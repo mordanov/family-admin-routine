@@ -7,6 +7,15 @@ services:
     environment:
       SECRET_KEY: ${SECRET_KEY:-change-me-admin-routine-secret}
       BACKUPS_DIR: /app/backups
+      # Backup storage: "local" (default, uses BACKUPS_DIR volume) or "s3".
+      BACKUP_STORAGE_BACKEND: ${BACKUP_STORAGE_BACKEND:-local}
+      BACKUP_S3_ENDPOINT_URL: ${BACKUP_S3_ENDPOINT_URL:-}
+      BACKUP_S3_REGION: ${BACKUP_S3_REGION:-fsn1}
+      BACKUP_S3_BUCKET: ${BACKUP_S3_BUCKET:-}
+      BACKUP_S3_ACCESS_KEY: ${BACKUP_S3_ACCESS_KEY:-}
+      BACKUP_S3_SECRET_KEY: ${BACKUP_S3_SECRET_KEY:-}
+      BACKUP_S3_PREFIX: ${BACKUP_S3_PREFIX:-admin-routine/backups/}
+      BACKUP_S3_FORCE_PATH_STYLE: ${BACKUP_S3_FORCE_PATH_STYLE:-1}
       ADMIN_USER1_USERNAME: ${ADMIN_USER1_USERNAME:-admin1}
       ADMIN_USER1_PASSWORD: ${ADMIN_USER1_PASSWORD:-password1}
       ADMIN_USER2_USERNAME: ${ADMIN_USER2_USERNAME:-admin2}

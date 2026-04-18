@@ -204,9 +204,34 @@ ADMIN_USER2_PASSWORD=your-password-2
 ```
 
 #### Backup Storage
+
+Backups are persisted via a pluggable store. Two backends are supported:
+
 ```bash
-BACKUPS_DIR=/app/backups                       # Inside container (volume-mounted)
+# "local" (default) — store ZIPs on disk inside the container
+BACKUP_STORAGE_BACKEND=local
+BACKUPS_DIR=/app/backups                       # docker volume mount
+
+# "s3" — push ZIPs to an S3-compatible bucket (e.g. Hetzner Object Storage
+# shared with family-archive). Backups are stored under a reserved key prefix
+# so they don't collide with archive data.
+BACKUP_STORAGE_BACKEND=s3
+BACKUP_S3_ENDPOINT_URL=https://fsn1.your-objectstorage.com
+BACKUP_S3_REGION=fsn1
+BACKUP_S3_BUCKET=family-archive
+BACKUP_S3_ACCESS_KEY=...
+BACKUP_S3_SECRET_KEY=...
+BACKUP_S3_PREFIX=admin-routine/backups/        # default
+BACKUP_S3_FORCE_PATH_STYLE=1                   # required for Hetzner / MinIO
 ```
+
+When deployed via `web-folders/docker-compose.yaml` the S3 credentials default
+to the same `ARCHIVE_S3_*` values used by `family-archive`, so by setting
+`ADMIN_ROUTINE_BACKUP_BACKEND=s3` you immediately reuse the existing bucket.
+The reserved prefix `admin-routine/backups/` keeps backup objects separate
+from archive content (`files/`, `thumbnails/`, `posters/`, …); the archive
+backend only ever touches keys it has stored in its own database, so there
+is no risk of cross-contamination.
 
 #### Database Hosts
 ```bash
