@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { useAuthStore } from '../store/authStore'
 
 const api = axios.create({ baseURL: '/api' })
 
@@ -8,13 +9,15 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+let redirecting = false
+
 api.interceptors.response.use(
   (r) => r,
   (err) => {
-    if (err.response?.status === 401) {
-      localStorage.removeItem('admin_routine_token')
-      localStorage.removeItem('admin_routine_user')
-      window.location.href = '/login'
+    if (err.response?.status === 401 && !redirecting) {
+      redirecting = true
+      useAuthStore.getState().logout()
+      window.location.replace('/login')
     }
     return Promise.reject(err)
   }
