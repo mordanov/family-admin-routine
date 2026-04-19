@@ -13,6 +13,7 @@ import {
   restoreBackup,
 } from '../api/backups'
 import SystemPanel from './SystemPanel'
+import CIPanel from './CIPanel'
 import './Dashboard.css'
 
 function fmtBytes(b) {
@@ -310,6 +311,9 @@ export default function DashboardPage() {
 
         {/* System info */}
         <SystemPanel t={t} />
+
+        {/* CI / Deployments */}
+        <CIPanel t={t} />
       </main>
     </div>
   )

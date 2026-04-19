@@ -1,0 +1,194 @@
+/* CI / Deployments Panel */
+.ci-panel { margin-bottom: 36px; }
+
+.ci-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.ci-header .section-title { margin: 0; }
+
+/* Spinner (mirrors sys-spinner) */
+@keyframes ci-spin { to { transform: rotate(360deg); } }
+
+.ci-spinner {
+  display: inline-block;
+  border-style: solid;
+  border-color: rgba(15, 52, 96, 0.2);
+  border-top-color: #0f3460;
+  border-radius: 50%;
+  animation: ci-spin 0.75s linear infinite;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.ci-loading {
+  display: flex;
+  justify-content: center;
+  padding: 28px 0;
+}
+
+/* Refresh button */
+.ci-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: none;
+  border: 1.5px solid #ddd;
+  border-radius: 6px;
+  font-size: 15px;
+  color: #555;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.ci-refresh-btn:hover:not(:disabled) { background: #f0f2f5; border-color: #bbb; }
+.ci-refresh-btn:disabled { opacity: 0.6; cursor: default; }
+
+/* Notice (not-configured / error) */
+.ci-notice {
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 13px;
+  color: #5d4037;
+  margin-bottom: 16px;
+}
+
+.ci-notice-err {
+  background: #ffebee;
+  border-color: #ef9a9a;
+  color: #c62828;
+}
+
+/* Per-site block */
+.ci-site-block {
+  margin-bottom: 24px;
+}
+
+.ci-site-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.ci-site-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.ci-repo-name {
+  font-size: 12px;
+  color: #888;
+  font-family: monospace;
+}
+
+/* Status dot (latest run summary) */
+.ci-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.ci-dot.ci-ok      { background: #4caf50; }
+.ci-dot.ci-fail    { background: #f44336; }
+.ci-dot.ci-running { background: #ff9800; }
+.ci-dot.ci-neutral { background: #bdbdbd; }
+
+.ci-empty {
+  font-size: 13px;
+  color: #aaa;
+  padding: 8px 0 4px;
+}
+
+/* Runs table */
+.ci-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.ci-table th {
+  background: #f5f6fa;
+  text-align: left;
+  padding: 8px 12px;
+  color: #555;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  border-bottom: 1.5px solid #eee;
+}
+
+.ci-table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid #f0f0f0;
+  color: #333;
+  vertical-align: middle;
+}
+
+.ci-table tr:last-child td { border-bottom: none; }
+
+.ci-run-row { cursor: pointer; transition: background 0.1s; }
+.ci-run-row:hover td { background: #f5f8ff; }
+
+.td-workflow { max-width: 240px; }
+
+.run-name {
+  display: block;
+  font-weight: 600;
+  color: #1a1a2e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.run-branch {
+  display: inline-block;
+  margin-top: 2px;
+  font-size: 11px;
+  color: #0f3460;
+  background: #e8f0fe;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-family: monospace;
+}
+
+.td-event {
+  font-size: 12px;
+  color: #666;
+  white-space: nowrap;
+}
+
+.td-mono { font-family: monospace; white-space: nowrap; color: #555; }
+.td-ago  { font-size: 12px; color: #999; white-space: nowrap; }
+
+/* Status badges */
+.ci-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ci-badge.ci-ok      { background: #e8f5e9; color: #2e7d32; }
+.ci-badge.ci-fail    { background: #ffebee; color: #c62828; }
+.ci-badge.ci-running { background: #fff3e0; color: #e65100; }
+.ci-badge.ci-neutral { background: #f5f5f5; color: #757575; }
+
+@media (max-width: 700px) {
+  .td-workflow { max-width: 120px; }
+  .td-ago { display: none; }
+}

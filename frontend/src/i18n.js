@@ -71,6 +71,17 @@ const translations = {
     sysContainerPct: 'Usage',
     sysNoData: 'No volume data available.',
     sysNoDocker: 'Docker socket not available (check container mount).',
+
+    // CI / Deployments panel
+    ciTitle: 'CI / Deployments',
+    ciNotConfigured: 'Set GITHUB_TOKEN and GITHUB_OWNER environment variables to enable this section.',
+    ciNoRuns: 'No workflow runs found.',
+    ciWorkflow: 'Workflow · Branch',
+    ciEvent: 'Event',
+    ciStatus: 'Status',
+    ciDuration: 'Duration',
+    ciTimestamp: 'Started',
+
     sysPruneBtn: 'Prune Images',
     sysPruneRunning: 'Pruning…',
     sysPruneResult: (count, size) => count > 0 ? `Removed ${count} image(s), reclaimed ${size}` : 'Nothing to remove.',
@@ -147,6 +158,17 @@ const translations = {
     sysContainerPct: 'Использование',
     sysNoData: 'Данные о volumes недоступны.',
     sysNoDocker: 'Docker socket недоступен (проверьте монтирование контейнера).',
+
+    // CI / Deployments panel
+    ciTitle: 'CI / Деплой',
+    ciNotConfigured: 'Укажите переменные GITHUB_TOKEN и GITHUB_OWNER для включения этого раздела.',
+    ciNoRuns: 'Запуски workflow не найдены.',
+    ciWorkflow: 'Workflow · Ветка',
+    ciEvent: 'Событие',
+    ciStatus: 'Статус',
+    ciDuration: 'Длительность',
+    ciTimestamp: 'Запущен',
+
     sysPruneBtn: 'Очистить образы',
     sysPruneRunning: 'Очистка…',
     sysPruneResult: (count, size) => count > 0 ? `Удалено ${count} образ(ов), освобождено ${size}` : 'Нечего удалять.',

@@ -62,3 +62,14 @@ SITES: dict = {
         "volumes": [],
     },
 }
+
+# GitHub Actions CI panel
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
+GITHUB_OWNER = os.getenv("GITHUB_OWNER", "")
+
+# Per-site repo name — defaults to the site slug.
+# Override individual repos with GITHUB_REPO_<SLUG_UPPER> (dashes → underscores).
+GITHUB_REPOS: dict[str, str] = {
+    name: os.getenv(f"GITHUB_REPO_{name.upper().replace('-', '_')}", name)
+    for name in SITES
+}

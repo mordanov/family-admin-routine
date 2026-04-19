@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import auth, backups, system
+from app.api import auth, backups, ci, system
 from app.config import BACKUPS_DIR
 
 
@@ -25,6 +25,7 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(backups.router, prefix="/api", tags=["backups"])
 app.include_router(system.router, prefix="/api", tags=["system"])
+app.include_router(ci.router, prefix="/api", tags=["ci"])
 
 
 @app.get("/health")
