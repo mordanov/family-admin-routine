@@ -53,13 +53,13 @@ def _build_backup_zip(tmp_path, site: str = "reminders-app") -> str:
 # ── GET /api/sites ────────────────────────────────────────────────────────────
 
 @pytest.mark.asyncio
-async def test_list_sites_returns_all_five(client, auth_headers, tmp_path, monkeypatch):
+async def test_list_sites_returns_all_sites(client, auth_headers, tmp_path, monkeypatch):
     monkeypatch.setattr("app.api.backups.BACKUPS_DIR", str(tmp_path))
     resp = await client.get("/api/sites", headers=auth_headers)
     assert resp.status_code == 200
     sites = resp.json()
     names = {s["name"] for s in sites}
-    assert names == {"family-kitchen-recipes", "poetry-site", "news-site", "budget-site", "reminders-app"}
+    assert names == {"family-kitchen-recipes", "poetry-site", "news-site", "budget-site", "reminders-app", "family-archive"}
 
 
 @pytest.mark.asyncio

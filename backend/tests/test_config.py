@@ -9,6 +9,7 @@ EXPECTED_SITES = {
     "news-site",
     "budget-site",
     "reminders-app",
+    "family-archive",
 }
 
 
