@@ -71,6 +71,10 @@ const translations = {
     sysContainerPct: 'Usage',
     sysNoData: 'No volume data available.',
     sysNoDocker: 'Docker socket not available (check container mount).',
+    sysPruneBtn: 'Prune Images',
+    sysPruneRunning: 'Pruning…',
+    sysPruneResult: (count, size) => count > 0 ? `Removed ${count} image(s), reclaimed ${size}` : 'Nothing to remove.',
+    sysPruneError: 'Prune failed: ',
   },
 
   ru: {
@@ -143,6 +147,10 @@ const translations = {
     sysContainerPct: 'Использование',
     sysNoData: 'Данные о volumes недоступны.',
     sysNoDocker: 'Docker socket недоступен (проверьте монтирование контейнера).',
+    sysPruneBtn: 'Очистить образы',
+    sysPruneRunning: 'Очистка…',
+    sysPruneResult: (count, size) => count > 0 ? `Удалено ${count} образ(ов), освобождено ${size}` : 'Нечего удалять.',
+    sysPruneError: 'Ошибка очистки: ',
   },
 }
 

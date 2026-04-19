@@ -256,6 +256,51 @@
   text-align: right;
 }
 
+/* Prune button */
+.sys-sub-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sys-prune-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: none;
+  border: 1.5px solid #ddd;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.sys-prune-btn:hover:not(:disabled) {
+  background: #fff3e0;
+  border-color: #e65100;
+  color: #e65100;
+}
+
+.sys-prune-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.prune-result {
+  font-size: 13px;
+  border-radius: 6px;
+  padding: 6px 12px;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
+.prune-ok  { background: #e8f5e9; color: #2e7d32; }
+.prune-err { background: #ffebee; color: #c62828; }
+
 @media (max-width: 700px) {
   .sys-stats-row { grid-template-columns: 1fr; }
   .vol-grid { grid-template-columns: 1fr 1fr; }

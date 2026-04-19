@@ -11,7 +11,7 @@ import shutil
 from typing import Optional
 
 import psutil
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from app.auth import get_current_user
 from app.config import BACKUPS_DIR, SITES
@@ -135,6 +135,30 @@ async def get_containers(_user=Depends(get_current_user)):
 
 
 # ── combined endpoint (fetches all three in parallel) ─────────────────────────
+
+@router.post("/docker-prune")
+async def docker_prune(_user=Depends(get_current_user)):
+    """Remove all unused Docker images — equivalent to: docker image prune -a -f"""
+    loop = asyncio.get_event_loop()
+
+    def _prune():
+        try:
+            import docker  # noqa — optional dep
+            client = docker.from_env(timeout=60)
+            result = client.images.prune(filters={"dangling": False})
+            deleted = result.get("ImagesDeleted") or []
+            return {
+                "deleted_count": len([d for d in deleted if "Deleted" in d]),
+                "reclaimed_bytes": result.get("SpaceReclaimed", 0),
+            }
+        except Exception as exc:
+            raise RuntimeError(str(exc))
+
+    try:
+        return await loop.run_in_executor(None, _prune)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
 
 @router.get("")
 async def system_info(_user=Depends(get_current_user)):

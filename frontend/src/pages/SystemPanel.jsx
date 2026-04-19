@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { getSystemDiskRam, getSystemVolumes, getSystemContainers } from '../api/system'
+import { getSystemDiskRam, getSystemVolumes, getSystemContainers, pruneDockerImages } from '../api/system'
 import './SystemPanel.css'
 
 function fmtBytes(b) {
@@ -107,6 +107,20 @@ export default function SystemPanel({ t }) {
   const volumes = useSection(getSystemVolumes, 120_000)
   const containers = useSection(getSystemContainers, 30_000)
 
+  const [pruneState, setPruneState] = useState({ loading: false, result: null, error: null })
+
+  const handlePrune = async () => {
+    setPruneState({ loading: true, result: null, error: null })
+    try {
+      const data = await pruneDockerImages()
+      const size = fmtBytes(data.reclaimed_bytes)
+      setPruneState({ loading: false, result: t('sysPruneResult', data.deleted_count, size), error: null })
+      containers.refresh()
+    } catch (err) {
+      setPruneState({ loading: false, result: null, error: t('sysPruneError') + (err.response?.data?.detail ?? err.message) })
+    }
+  }
+
   const disk = diskRam.data?.disk || {}
   const ram  = diskRam.data?.ram  || {}
   const vols = volumes.data?.volumes || {}
@@ -168,11 +182,30 @@ export default function SystemPanel({ t }) {
       )}
 
       {/* ── Containers ── */}
-      <SectionHeader
-        title={t('sysContainers')}
-        loading={containers.loading}
-        onRefresh={containers.refresh}
-      />
+      <div className="sys-sub-header">
+        <span className="sys-sub-title">{t('sysContainers')}</span>
+        <div className="sys-sub-actions">
+          <button
+            className="sys-prune-btn"
+            onClick={handlePrune}
+            disabled={pruneState.loading}
+            title="docker image prune -a -f"
+          >
+            {pruneState.loading ? <><Spinner size={12} /> {t('sysPruneRunning')}</> : t('sysPruneBtn')}
+          </button>
+          <RefreshBtn loading={containers.loading} onClick={containers.refresh} />
+        </div>
+      </div>
+      {pruneState.result && (
+        <div className="prune-result prune-ok" onClick={() => setPruneState(s => ({ ...s, result: null }))}>
+          {pruneState.result}
+        </div>
+      )}
+      {pruneState.error && (
+        <div className="prune-result prune-err" onClick={() => setPruneState(s => ({ ...s, error: null }))}>
+          {pruneState.error}
+        </div>
+      )}
       {isFirstContainers ? (
         <div className="sys-loading-block"><Spinner size={20} /></div>
       ) : ctrs.length === 0 ? (
