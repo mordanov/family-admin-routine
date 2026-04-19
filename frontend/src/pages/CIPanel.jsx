@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { getCiRuns } from '../api/ci'
-import { SITE_LABEL_KEYS } from '../i18n'
 import './CIPanel.css'
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -40,10 +39,9 @@ function conclusionLabel(status, conclusion) {
   return conclusion || status || '?'
 }
 
-function siteSummaryClass(runs) {
+function repoSummaryClass(runs) {
   if (!runs.length) return 'ci-neutral'
-  const latest = runs[0]
-  return conclusionClass(latest.status, latest.conclusion)
+  return conclusionClass(runs[0].status, runs[0].conclusion)
 }
 
 // ── sub-components ────────────────────────────────────────────────────────────
@@ -65,7 +63,7 @@ function RefreshBtn({ loading, onClick }) {
   )
 }
 
-// ── main component ────────────────────────────────────────────────────────────
+// ── hook ──────────────────────────────────────────────────────────────────────
 
 function useSection(fetcher, autoRefreshMs) {
   const [data, setData] = useState(null)
@@ -95,9 +93,20 @@ function useSection(fetcher, autoRefreshMs) {
   return { data, loading, error, refresh: load }
 }
 
+// ── main component ────────────────────────────────────────────────────────────
+
 export default function CIPanel({ t }) {
   const ci = useSection(getCiRuns, 60_000)
+  const [activeTab, setActiveTab] = useState(0)
   const isFirst = ci.loading && !ci.data
+
+  const repos = ci.data?.repos ?? []
+  const activeRepo = repos[activeTab] ?? repos[0]
+
+  // keep activeTab in bounds when repos list changes
+  useEffect(() => {
+    if (activeTab >= repos.length && repos.length > 0) setActiveTab(0)
+  }, [repos.length, activeTab])
 
   return (
     <section className="section ci-panel">
@@ -112,19 +121,31 @@ export default function CIPanel({ t }) {
         <div className="ci-notice ci-notice-err">Failed to load CI data.</div>
       ) : !ci.data?.configured ? (
         <div className="ci-notice">{t('ciNotConfigured')}</div>
+      ) : repos.length === 0 ? (
+        <div className="ci-notice">{t('ciNoRepos')}</div>
       ) : (
-        Object.entries(ci.data.sites).map(([siteSlug, { repo, runs }]) => {
-          const labelKey = SITE_LABEL_KEYS[siteSlug]
-          const siteLabel = labelKey ? t(labelKey) : siteSlug
-          const summaryClass = siteSummaryClass(runs)
-          return (
-            <div key={siteSlug} className="ci-site-block">
-              <div className="ci-site-header">
-                <span className="ci-site-name">{siteLabel}</span>
-                <span className="ci-repo-name">{repo}</span>
-                <span className={`ci-dot ${summaryClass}`} />
+        <>
+          {/* ── Tab bar ── */}
+          <div className="ci-tabs">
+            {repos.map(({ key, label, runs }, idx) => (
+              <button
+                key={key}
+                className={`ci-tab ${idx === activeTab ? 'ci-tab-active' : ''}`}
+                onClick={() => setActiveTab(idx)}
+              >
+                <span className={`ci-tab-dot ${repoSummaryClass(runs)}`} />
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* ── Active repo pane ── */}
+          {activeRepo && (
+            <div className="ci-pane">
+              <div className="ci-pane-meta">
+                <span className="ci-repo-name">{activeRepo.repo}</span>
               </div>
-              {runs.length === 0 ? (
+              {activeRepo.runs.length === 0 ? (
                 <div className="ci-empty">{t('ciNoRuns')}</div>
               ) : (
                 <div className="table-wrap">
@@ -132,14 +153,14 @@ export default function CIPanel({ t }) {
                     <thead>
                       <tr>
                         <th>{t('ciWorkflow')}</th>
-                        <th>{t('ciEvent')}</th>
+                        <th>{t('ciCommit')}</th>
                         <th>{t('ciStatus')}</th>
                         <th>{t('ciDuration')}</th>
                         <th>{t('ciTimestamp')}</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {runs.map((run) => (
+                      {activeRepo.runs.map((run) => (
                         <tr
                           key={run.id}
                           className="ci-run-row"
@@ -150,7 +171,12 @@ export default function CIPanel({ t }) {
                             <span className="run-name">{run.name}</span>
                             {run.branch && <span className="run-branch">{run.branch}</span>}
                           </td>
-                          <td className="td-event">{run.event}</td>
+                          <td className="td-commit">
+                            {run.commit_message
+                              ? <span className="commit-msg">{run.commit_message}</span>
+                              : <span className="commit-sha">{run.commit_sha}</span>
+                            }
+                          </td>
                           <td>
                             <span className={`ci-badge ${conclusionClass(run.status, run.conclusion)}`}>
                               {conclusionLabel(run.status, run.conclusion)}
@@ -165,8 +191,8 @@ export default function CIPanel({ t }) {
                 </div>
               )}
             </div>
-          )
-        })
+          )}
+        </>
       )}
     </section>
   )

@@ -67,43 +67,72 @@
   color: #c62828;
 }
 
-/* Per-site block */
-.ci-site-block {
-  margin-bottom: 24px;
-}
-
-.ci-site-header {
+/* ── Tabs ────────────────────────────────────────────────────────────────── */
+.ci-tabs {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
 }
 
-.ci-site-name {
-  font-size: 14px;
-  font-weight: 700;
-  color: #1a1a2e;
+.ci-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: #f5f6fa;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #555;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.ci-tab:hover { background: #eef0f8; border-color: #bbb; }
+
+.ci-tab-active {
+  background: #1a1a2e;
+  border-color: #1a1a2e;
+  color: #fff;
+}
+
+.ci-tab-active:hover { background: #0f3460; border-color: #0f3460; }
+
+/* Status dot on tab */
+.ci-tab-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.ci-tab-dot.ci-ok      { background: #4caf50; }
+.ci-tab-dot.ci-fail    { background: #f44336; }
+.ci-tab-dot.ci-running { background: #ff9800; }
+.ci-tab-dot.ci-neutral { background: #bdbdbd; }
+
+/* ── Active repo pane ─────────────────────────────────────────────────────── */
+.ci-pane {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  overflow: hidden;
+}
+
+.ci-pane-meta {
+  padding: 8px 14px;
+  border-bottom: 1px solid #f0f0f0;
+  background: #fafafa;
 }
 
 .ci-repo-name {
-  font-size: 12px;
-  color: #888;
+  font-size: 11px;
+  color: #999;
   font-family: monospace;
 }
-
-/* Status dot (latest run summary) */
-.ci-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  margin-left: auto;
-}
-
-.ci-dot.ci-ok      { background: #4caf50; }
-.ci-dot.ci-fail    { background: #f44336; }
-.ci-dot.ci-running { background: #ff9800; }
-.ci-dot.ci-neutral { background: #bdbdbd; }
 
 .ci-empty {
   font-size: 13px;
@@ -172,6 +201,23 @@
 
 .td-mono { font-family: monospace; white-space: nowrap; color: #555; }
 .td-ago  { font-size: 12px; color: #999; white-space: nowrap; }
+
+.td-commit { max-width: 260px; }
+
+.commit-msg {
+  display: block;
+  font-size: 12px;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.commit-sha {
+  font-family: monospace;
+  font-size: 11px;
+  color: #999;
+}
 
 /* Status badges */
 .ci-badge {

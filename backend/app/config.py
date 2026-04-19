@@ -74,9 +74,6 @@ SITES: dict = {
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
 GITHUB_OWNER = os.getenv("GITHUB_OWNER", "")
 
-# Per-site repo name — defaults to the site slug.
-# Override individual repos with GITHUB_REPO_<SLUG_UPPER> (dashes → underscores).
-GITHUB_REPOS: dict[str, str] = {
-    name: os.getenv(f"GITHUB_REPO_{name.upper().replace('-', '_')}", name)
-    for name in SITES
-}
+# Path to the YAML file listing repos to show in the CI panel.
+# Mount it as a read-only volume: ./ci-repos.yaml:/etc/admin-routine/ci-repos.yaml:ro
+CI_REPOS_FILE = os.getenv("CI_REPOS_FILE", "/etc/admin-routine/ci-repos.yaml")

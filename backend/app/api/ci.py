@@ -1,22 +1,38 @@
-"""GET /api/ci/runs — last 5 GitHub Actions workflow runs per deployed site."""
+"""GET /api/ci/runs — last 5 GitHub Actions workflow runs per repo.
 
-import asyncio
+Repos are read from CI_REPOS_FILE (a YAML file mounted as a volume).
+Each entry may override the default GITHUB_OWNER with its own `owner` field.
+"""
+
+import os
 from datetime import datetime
 from typing import Optional
 
 import httpx
+import yaml
 from fastapi import APIRouter, Depends
 
 from app.auth import get_current_user
-from app.config import GITHUB_OWNER, GITHUB_REPOS, GITHUB_TOKEN
+from app.config import CI_REPOS_FILE, GITHUB_OWNER, GITHUB_TOKEN
 
 router = APIRouter(prefix="/ci", tags=["ci"])
 
-_GH_HEADERS = {
-    "Accept": "application/vnd.github+json",
-    "X-GitHub-Api-Version": "2022-11-28",
-    **({"Authorization": f"Bearer {GITHUB_TOKEN}"} if GITHUB_TOKEN else {}),
-}
+
+def _load_repos() -> list[dict]:
+    """Read repo list from CI_REPOS_FILE. Returns [] if file is missing or invalid."""
+    try:
+        with open(CI_REPOS_FILE) as f:
+            data = yaml.safe_load(f)
+        return data.get("repos", []) if isinstance(data, dict) else []
+    except Exception:
+        return []
+
+
+def _gh_headers() -> dict:
+    h = {"Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"}
+    if GITHUB_TOKEN:
+        h["Authorization"] = f"Bearer {GITHUB_TOKEN}"
+    return h
 
 
 def _duration_s(run: dict) -> Optional[int]:
@@ -32,10 +48,10 @@ def _duration_s(run: dict) -> Optional[int]:
         return None
 
 
-async def _fetch_runs(client: httpx.AsyncClient, repo: str) -> list[dict]:
-    url = f"https://api.github.com/repos/{GITHUB_OWNER}/{repo}/actions/runs"
+async def _fetch_runs(client: httpx.AsyncClient, owner: str, repo: str) -> list[dict]:
+    url = f"https://api.github.com/repos/{owner}/{repo}/actions/runs"
     try:
-        r = await client.get(url, params={"per_page": 5}, headers=_GH_HEADERS, timeout=10)
+        r = await client.get(url, params={"per_page": 5}, headers=_gh_headers(), timeout=10)
         r.raise_for_status()
         runs = r.json().get("workflow_runs", [])
         return [
@@ -51,6 +67,8 @@ async def _fetch_runs(client: httpx.AsyncClient, repo: str) -> list[dict]:
                 "updated_at": run.get("updated_at"),
                 "duration_s": _duration_s(run),
                 "url": run.get("html_url", ""),
+                "commit_message": (run.get("head_commit") or {}).get("message", "").split("\n")[0],
+                "commit_sha": (run.get("head_sha") or "")[:7],
             }
             for run in runs
         ]
@@ -60,22 +78,29 @@ async def _fetch_runs(client: httpx.AsyncClient, repo: str) -> list[dict]:
 
 @router.get("/runs")
 async def get_ci_runs(_user=Depends(get_current_user)):
-    if not GITHUB_OWNER or not GITHUB_TOKEN:
-        return {"configured": False, "sites": {}}
+    if not GITHUB_TOKEN or not GITHUB_OWNER:
+        return {"configured": False, "repos": []}
+
+    repo_defs = _load_repos()
 
     async with httpx.AsyncClient() as client:
-        site_names = list(GITHUB_REPOS.keys())
+        import asyncio
         results = await asyncio.gather(
-            *[_fetch_runs(client, GITHUB_REPOS[s]) for s in site_names]
+            *[
+                _fetch_runs(client, r.get("owner", GITHUB_OWNER), r["repo"])
+                for r in repo_defs
+            ]
         )
 
     return {
         "configured": True,
-        "sites": {
-            site: {
-                "repo": f"{GITHUB_OWNER}/{GITHUB_REPOS[site]}",
+        "repos": [
+            {
+                "key": f"{r.get('owner', GITHUB_OWNER)}/{r['repo']}",
+                "repo": f"{r.get('owner', GITHUB_OWNER)}/{r['repo']}",
+                "label": r.get("label", r["repo"]),
                 "runs": runs,
             }
-            for site, runs in zip(site_names, results)
-        },
+            for r, runs in zip(repo_defs, results)
+        ],
     }

@@ -46,10 +46,10 @@ services:
       ARCHIVE_POSTGRES_PASSWORD: ${ARCHIVE_POSTGRES_PASSWORD:-}
       GITHUB_TOKEN: ${GITHUB_TOKEN:-}
       GITHUB_OWNER: ${GITHUB_OWNER:-}
-      GITHUB_REPO_FAMILY_ARCHIVE: ${GITHUB_REPO_FAMILY_ARCHIVE:-family_archive}
     volumes:
       - backups_data:/app/backups
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./ci-repos.yaml:/etc/admin-routine/ci-repos.yaml:ro
     expose:
       - "8000"
     healthcheck:

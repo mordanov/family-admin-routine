@@ -76,9 +76,10 @@ const translations = {
     // CI / Deployments panel
     ciTitle: 'CI / Deployments',
     ciNotConfigured: 'Set GITHUB_TOKEN and GITHUB_OWNER environment variables to enable this section.',
+    ciNoRepos: 'No repositories configured. Mount a ci-repos.yaml file at /etc/admin-routine/ci-repos.yaml.',
     ciNoRuns: 'No workflow runs found.',
     ciWorkflow: 'Workflow · Branch',
-    ciEvent: 'Event',
+    ciCommit: 'Commit',
     ciStatus: 'Status',
     ciDuration: 'Duration',
     ciTimestamp: 'Started',
@@ -164,9 +165,10 @@ const translations = {
     // CI / Deployments panel
     ciTitle: 'CI / Деплой',
     ciNotConfigured: 'Укажите переменные GITHUB_TOKEN и GITHUB_OWNER для включения этого раздела.',
+    ciNoRepos: 'Репозитории не настроены. Смонтируйте файл ci-repos.yaml по пути /etc/admin-routine/ci-repos.yaml.',
     ciNoRuns: 'Запуски workflow не найдены.',
     ciWorkflow: 'Workflow · Ветка',
-    ciEvent: 'Событие',
+    ciCommit: 'Коммит',
     ciStatus: 'Статус',
     ciDuration: 'Длительность',
     ciTimestamp: 'Запущен',
