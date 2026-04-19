@@ -61,6 +61,13 @@ SITES: dict = {
         "db_pass_env": "REMINDERS_POSTGRES_PASSWORD",
         "volumes": [],
     },
+    "family-archive": {
+        "db_host": os.getenv("ARCHIVE_DB_HOST", "recipes-db"),
+        "db_name_env": "ARCHIVE_POSTGRES_DB",
+        "db_user_env": "ARCHIVE_POSTGRES_USER",
+        "db_pass_env": "ARCHIVE_POSTGRES_PASSWORD",
+        "volumes": [],  # file storage lives on S3/MinIO — no local volumes to snapshot
+    },
 }
 
 # GitHub Actions CI panel

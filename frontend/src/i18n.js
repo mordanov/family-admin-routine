@@ -56,6 +56,7 @@ const translations = {
     siteNews: '📰 News',
     siteBudget: '💰 Budget',
     siteReminders: '🔔 Reminders',
+    siteArchive: '🗄 Archive',
 
     // System panel
     sysTitle: 'System',
@@ -143,6 +144,7 @@ const translations = {
     siteNews: '📰 Новости',
     siteBudget: '💰 Бюджет',
     siteReminders: '🔔 Напоминания',
+    siteArchive: '🗄 Архив',
 
     // System panel
     sysTitle: 'Система',
@@ -182,6 +184,7 @@ export const SITE_LABEL_KEYS = {
   'news-site': 'siteNews',
   'budget-site': 'siteBudget',
   'reminders-app': 'siteReminders',
+  'family-archive': 'siteArchive',
 }
 
 export function useT() {
