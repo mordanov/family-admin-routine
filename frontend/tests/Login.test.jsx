@@ -57,7 +57,7 @@ describe('LoginPage', () => {
     await userEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
     await waitFor(() =>
-      expect(loginApi).toHaveBeenCalledWith('admin1', 'pass1')
+      expect(loginApi).toHaveBeenCalledWith('admin1', 'pass1', false)
     )
   })
 
@@ -70,7 +70,7 @@ describe('LoginPage', () => {
     await userEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
     await waitFor(() =>
-      expect(mockStoreLogin).toHaveBeenCalledWith('tok123', 'admin1')
+      expect(mockStoreLogin).toHaveBeenCalledWith('tok123', 'admin1', false)
     )
   })
 
