@@ -3,6 +3,7 @@ import os
 SECRET_KEY = os.getenv("SECRET_KEY", "change-me-admin-routine-secret")
 ALGORITHM = "HS256"
 TOKEN_EXPIRE_HOURS = 24
+REMEMBER_ME_EXPIRE_DAYS = 30
 
 BACKUPS_DIR = os.getenv("BACKUPS_DIR", "/app/backups")
 

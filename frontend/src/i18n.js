@@ -10,6 +10,7 @@ const translations = {
     password: 'Password',
     signingIn: 'Signing in…',
     signIn: 'Sign in',
+    rememberMe: 'Remember me',
     invalidCredentials: 'Invalid credentials',
 
     // Header
@@ -99,6 +100,7 @@ const translations = {
     password: 'Пароль',
     signingIn: 'Вход…',
     signIn: 'Войти',
+    rememberMe: 'Запомнить меня',
     invalidCredentials: 'Неверные учётные данные',
 
     // Header

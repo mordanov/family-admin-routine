@@ -15,8 +15,8 @@ def authenticate_user(username: str, password: str) -> Optional[str]:
     return username
 
 
-def create_token(username: str) -> str:
-    expire = datetime.utcnow() + timedelta(hours=TOKEN_EXPIRE_HOURS)
+def create_token(username: str, expires_delta=None) -> str:
+    expire = datetime.utcnow() + (expires_delta or timedelta(hours=TOKEN_EXPIRE_HOURS))
     return jwt.encode({"sub": username, "exp": expire}, SECRET_KEY, algorithm=ALGORITHM)
 
 

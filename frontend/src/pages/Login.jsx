@@ -9,6 +9,7 @@ import './Login.css'
 export default function LoginPage() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [rememberMe, setRememberMe] = useState(() => localStorage.getItem('remember_me') === 'true')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { login: storeLogin } = useAuthStore()
@@ -20,9 +21,10 @@ export default function LoginPage() {
     e.preventDefault()
     setError('')
     setLoading(true)
+    localStorage.setItem('remember_me', String(rememberMe))
     try {
-      const data = await login(username, password)
-      storeLogin(data.access_token, username)
+      const data = await login(username, password, rememberMe)
+      storeLogin(data.access_token, username, rememberMe)
       navigate('/')
     } catch {
       setError(t('invalidCredentials'))
@@ -71,6 +73,14 @@ export default function LoginPage() {
             />
           </div>
           {error && <p className="login-error">{error}</p>}
+          <label className="login-remember">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+            />
+            <span>{t('rememberMe')}</span>
+          </label>
           <button type="submit" className="login-btn" disabled={loading}>
             {loading ? t('signingIn') : t('signIn')}
           </button>
