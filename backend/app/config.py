@@ -67,7 +67,9 @@ SITES: dict = {
         "db_name_env": "ARCHIVE_POSTGRES_DB",
         "db_user_env": "ARCHIVE_POSTGRES_USER",
         "db_pass_env": "ARCHIVE_POSTGRES_PASSWORD",
-        "volumes": [],  # file storage lives on S3/MinIO — no local volumes to snapshot
+        "volumes": [
+            {"name": "thumbnails", "path": "/mnt/archive_thumbnails"},
+        ],
     },
 }
 
